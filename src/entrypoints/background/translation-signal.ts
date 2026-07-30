@@ -67,8 +67,24 @@ function requestDetectedPageLanguageRefresh(tabId: number) {
   )
 }
 
+function canRunContentScripts(url: string | undefined): boolean {
+  if (!url) return false
+
+  try {
+    return ["http:", "https:", "file:"].includes(new URL(url).protocol)
+  } catch {
+    return false
+  }
+}
+
 async function publishAndRefreshActiveTab(tabId: number): Promise<void> {
   await publishCachedDetectedCodeForTab(tabId)
+
+  const tab = await browser.tabs.get(tabId).catch(() => undefined)
+  if (!canRunContentScripts(tab?.url)) {
+    return
+  }
+
   requestDetectedPageLanguageRefresh(tabId)
 }
 

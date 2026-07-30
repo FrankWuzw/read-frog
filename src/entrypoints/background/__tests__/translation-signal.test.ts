@@ -10,6 +10,7 @@ const storageSetItemMock = vi.fn<(...args: any[]) => any>()
 const storageRemoveItemMock = vi.fn<(...args: any[]) => any>()
 const tabsOnRemovedAddListenerMock = vi.fn<(...args: any[]) => any>()
 const tabsOnActivatedAddListenerMock = vi.fn<(...args: any[]) => any>()
+const tabsGetMock = vi.fn<(...args: any[]) => any>()
 const tabsQueryMock = vi.fn<(...args: any[]) => any>()
 const webNavigationOnCommittedAddListenerMock = vi.fn<(...args: any[]) => any>()
 const injectHostContentIntoTabIframesMock = vi.fn<(...args: any[]) => any>()
@@ -87,6 +88,7 @@ describe("translationMessage", () => {
 
     browser.tabs.onRemoved.addListener = tabsOnRemovedAddListenerMock
     browser.tabs.onActivated.addListener = tabsOnActivatedAddListenerMock
+    browser.tabs.get = tabsGetMock
     browser.tabs.query = tabsQueryMock
     browser.webNavigation.onCommitted.addListener = webNavigationOnCommittedAddListenerMock
     storage.getItem = storageGetItemMock
@@ -98,6 +100,7 @@ describe("translationMessage", () => {
       return vi.fn<(...args: any[]) => any>()
     })
     sendMessageMock.mockResolvedValue(undefined)
+    tabsGetMock.mockResolvedValue({ id: 42, url: "https://example.com/articles/1" })
     tabsQueryMock.mockResolvedValue([{ id: 42 }])
     storageGetItemMock.mockResolvedValue(undefined)
     storageSetItemMock.mockResolvedValue(undefined)
@@ -402,6 +405,18 @@ describe("translationMessage", () => {
       detectedCode: DEFAULT_DETECTED_CODE,
     })
     expect(sendMessageMock).toHaveBeenCalledWith("refreshDetectedPageLanguage", undefined, 42)
+  })
+
+  it("does not message tabs where content scripts cannot run", async () => {
+    await setupSubject()
+    tabsGetMock.mockResolvedValue({ id: 42, url: "chrome://extensions/" })
+
+    await getOnActivatedListener()({ tabId: 42 })
+
+    expect(sendMessageMock).toHaveBeenCalledWith("detectedPageLanguageChanged", {
+      detectedCode: DEFAULT_DETECTED_CODE,
+    })
+    expect(sendMessageMock).not.toHaveBeenCalledWith("refreshDetectedPageLanguage", undefined, 42)
   })
 
   it("clears detected language cache when a tab is removed", async () => {

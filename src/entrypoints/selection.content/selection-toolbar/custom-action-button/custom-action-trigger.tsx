@@ -1,7 +1,7 @@
 import type { MouseEvent } from "react"
 import type { SelectionToolbarCustomAction } from "@/types/config/selection-toolbar"
-import { Icon } from "@iconify/react"
 import { useCallback } from "react"
+import { CspSafeIcon } from "@/components/csp-safe-icon"
 import { SelectionToolbarTooltip } from "../../components/selection-tooltip"
 import { useSelectionCustomActionPopover } from "./provider"
 
@@ -32,7 +32,7 @@ export function SelectionToolbarCustomActionTrigger({
         />
       }
     >
-      <Icon icon={action.icon} strokeWidth={0.8} className="size-4.5" />
+      <CspSafeIcon icon={action.icon} strokeWidth={0.8} className="size-4.5" />
     </SelectionToolbarTooltip>
   )
 }

@@ -80,6 +80,20 @@ vi.mock("@iconify/react", async () => {
   return {
     Icon: ({ className, icon }: { className?: string; icon: string }) =>
       createElement("span", { "aria-hidden": true, className, "data-icon": icon }),
+    buildIcon: (icon: { body: string; height: number; width: number }) => ({
+      attributes: {
+        height: "1em",
+        viewBox: `0 0 ${icon.width} ${icon.height}`,
+        width: "1em",
+      },
+      body: icon.body,
+    }),
+    getIcon: () => null,
+    loadIcon: async () => ({
+      body: "",
+      height: 24,
+      width: 24,
+    }),
     _api: {
       setFetch: () => {},
     },

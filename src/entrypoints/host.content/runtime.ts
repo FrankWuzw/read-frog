@@ -42,7 +42,12 @@ export async function bootstrapHostContent(
 
   const detectAndReportPageLanguage = async (url: string) => {
     const { detectedCodeOrUnd } = await detectPageLanguageLightweight()
-    void sendMessage("reportDetectedPageLanguage", { url, detectedCodeOrUnd })
+    try {
+      await sendMessage("reportDetectedPageLanguage", { url, detectedCodeOrUnd })
+    } catch {
+      // Navigation and extension reloads can invalidate the content-script
+      // context before the background receives this best-effort report.
+    }
   }
 
   // For late-loading iframes: check if translation is already enabled for this tab

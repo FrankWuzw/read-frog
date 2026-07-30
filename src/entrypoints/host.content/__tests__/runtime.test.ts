@@ -228,4 +228,23 @@ describe("bootstrapHostContent URL changes", () => {
 
     invalidate()
   })
+
+  it("continues when navigation invalidates the language report message", async () => {
+    mockSendMessage.mockImplementation((name: string) => {
+      if (name === "getEnablePageTranslationFromContentScript") return Promise.resolve(false)
+      if (name === "reportDetectedPageLanguage") {
+        return Promise.reject(
+          new Error("Could not establish connection. Receiving end does not exist."),
+        )
+      }
+
+      return Promise.resolve(undefined)
+    })
+
+    const { ctx, invalidate } = createContentScriptContext()
+
+    await expect(bootstrapHostContent(ctx, null)).resolves.toBeUndefined()
+
+    invalidate()
+  })
 })

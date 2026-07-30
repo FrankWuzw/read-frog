@@ -12,8 +12,8 @@ vi.mock("@/components/ui/selection-popover", () => ({
   },
 }))
 
-vi.mock("@iconify/react", () => ({
-  Icon: ({
+vi.mock("@/components/csp-safe-icon", () => ({
+  CspSafeIcon: ({
     className,
     icon,
     strokeWidth,
