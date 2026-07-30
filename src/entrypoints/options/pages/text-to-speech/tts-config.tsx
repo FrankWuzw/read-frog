@@ -4,7 +4,7 @@ import type { ZodType } from "zod"
 import type { TTSVoice, TTSVoiceGroup, TTSVoiceItem } from "@/types/config/tts"
 import { IconLoader2, IconPlayerPlayFilled } from "@tabler/icons-react"
 import { useAtom } from "jotai"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { LanguageCombobox } from "@/components/language-combobox"
 import { Badge } from "@/components/ui/base-ui/badge"
 import { Button } from "@/components/ui/base-ui/button"
@@ -285,6 +285,10 @@ function TtsTextField({
 }: TtsTextFieldProps) {
   const [draftValue, setDraftValue] = useState(value)
 
+  useEffect(() => {
+    setDraftValue(value)
+  }, [value])
+
   return (
     <Field
       validationMode="onBlur"
@@ -305,7 +309,7 @@ function TtsTextField({
         }}
         onBlur={() => {
           const nextValue = allowEmpty ? draftValue : draftValue.trim()
-          if (allowEmpty || nextValue) {
+          if ((allowEmpty || nextValue) && nextValue !== value) {
             onCommit(nextValue)
           }
         }}
@@ -334,7 +338,6 @@ function OpenAICompatibleTTSFields() {
   return (
     <>
       <TtsTextField
-        key={externalConfig.baseURL}
         id="externalTtsBaseURL"
         label={i18n.t("options.tts.external.baseURL.label")}
         hint={i18n.t("options.tts.external.baseURL.hint")}
@@ -342,7 +345,6 @@ function OpenAICompatibleTTSFields() {
         onCommit={(baseURL) => void updateExternalConfig({ baseURL })}
       />
       <TtsTextField
-        key={externalConfig.apiKey}
         id="externalTtsApiKey"
         label={i18n.t("options.tts.external.apiKey.label")}
         hint={i18n.t("options.tts.external.apiKey.hint")}
@@ -352,14 +354,12 @@ function OpenAICompatibleTTSFields() {
         onCommit={(apiKey) => void updateExternalConfig({ apiKey })}
       />
       <TtsTextField
-        key={externalConfig.model}
         id="externalTtsModel"
         label={i18n.t("options.tts.external.model.label")}
         value={externalConfig.model}
         onCommit={(model) => void updateExternalConfig({ model })}
       />
       <TtsTextField
-        key={externalConfig.voice}
         id="externalTtsVoice"
         label={i18n.t("options.tts.external.voice.label")}
         value={externalConfig.voice}
@@ -392,7 +392,6 @@ function OpenAICompatibleTTSFields() {
         </Select>
       </Field>
       <TtsNumberField
-        key={externalConfig.speed}
         id="externalTtsSpeed"
         label={i18n.t("options.tts.external.speed.label")}
         hint={i18n.t("options.tts.external.speed.hint")}
@@ -404,7 +403,6 @@ function OpenAICompatibleTTSFields() {
         onCommit={(speed) => void updateExternalConfig({ speed })}
       />
       <TtsTextField
-        key={externalConfig.instructions}
         id="externalTtsInstructions"
         label={i18n.t("options.tts.external.instructions.label")}
         hint={i18n.t("options.tts.external.instructions.hint")}
@@ -552,6 +550,10 @@ function TtsNumberField({
 }: TtsNumberFieldProps) {
   const [draftValue, setDraftValue] = useState(() => String(value))
 
+  useEffect(() => {
+    setDraftValue(String(value))
+  }, [value])
+
   const validate = (inputValue: unknown) => {
     const parseResult = schema.safeParse(inputValue)
     if (parseResult.success) {
@@ -568,7 +570,9 @@ function TtsNumberField({
     }
 
     setDraftValue(String(parseResult.data))
-    onCommit(parseResult.data)
+    if (parseResult.data !== value) {
+      onCommit(parseResult.data)
+    }
   }
 
   return (
@@ -597,7 +601,6 @@ function TtsRateField() {
 
   return (
     <TtsNumberField
-      key={ttsConfig.rate}
       id="ttsRate"
       label={i18n.t("options.tts.rate.label")}
       hint={i18n.t("options.tts.rate.hint")}
@@ -617,7 +620,6 @@ function TtsPitchField() {
 
   return (
     <TtsNumberField
-      key={ttsConfig.pitch}
       id="ttsPitch"
       label={i18n.t("options.tts.pitch.label")}
       hint={i18n.t("options.tts.pitch.hint")}
@@ -637,7 +639,6 @@ function TtsVolumeField() {
 
   return (
     <TtsNumberField
-      key={ttsConfig.volume}
       id="ttsVolume"
       label={i18n.t("options.tts.volume.label")}
       hint={i18n.t("options.tts.volume.hint")}
