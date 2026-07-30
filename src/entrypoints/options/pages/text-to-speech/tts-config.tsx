@@ -1,5 +1,6 @@
 import type { LangCodeISO6393 } from "@read-frog/definitions"
 import type { FocusEvent } from "react"
+import type { ZodType } from "zod"
 import type { TTSVoice, TTSVoiceGroup, TTSVoiceItem } from "@/types/config/tts"
 import { IconLoader2, IconPlayerPlayFilled } from "@tabler/icons-react"
 import { useAtom } from "jotai"
@@ -30,18 +31,30 @@ import {
 } from "@/components/ui/base-ui/field"
 import { Input } from "@/components/ui/base-ui/input"
 import { Item, ItemContent, ItemDescription, ItemTitle } from "@/components/ui/base-ui/item"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/base-ui/select"
 import { useTextToSpeech } from "@/hooks/use-text-to-speech"
 import { ANALYTICS_SURFACE } from "@/types/analytics"
 import {
   EDGE_TTS_VOICE_GROUPS,
   getDefaultTTSVoiceForLanguage,
   getEdgeTTSVoiceItem,
+  MAX_OPENAI_COMPATIBLE_TTS_SPEED,
   MAX_TTS_PITCH,
   MAX_TTS_RATE,
   MAX_TTS_VOLUME,
+  MIN_OPENAI_COMPATIBLE_TTS_SPEED,
   MIN_TTS_PITCH,
   MIN_TTS_RATE,
   MIN_TTS_VOLUME,
+  OPENAI_COMPATIBLE_TTS_RESPONSE_FORMATS,
+  openAICompatibleTTSSpeedSchema,
   ttsPitchSchema,
   ttsRateSchema,
   ttsVolumeSchema,
@@ -57,7 +70,8 @@ interface TtsNumberFieldProps {
   value: number
   min: number
   max: number
-  schema: typeof ttsRateSchema
+  schema: ZodType<number>
+  step?: string
   onCommit: (value: number) => void
 }
 
@@ -186,6 +200,8 @@ function TTSVoiceCombobox({ id, value, onValueChange }: TTSVoiceComboboxProps) {
 }
 
 export function TtsConfig() {
+  const [ttsConfig] = useAtom(configFieldsAtomMap.tts)
+
   return (
     <ConfigCard
       id="tts-config"
@@ -200,13 +216,214 @@ export function TtsConfig() {
       description={i18n.t("options.tts.description")}
     >
       <FieldGroup>
-        <TtsLanguageVoiceField />
-        <TtsDefaultVoiceField />
-        <TtsRateField />
-        <TtsPitchField />
-        <TtsVolumeField />
+        <TtsBackendField />
+        {ttsConfig.backend === "edge" ? (
+          <>
+            <TtsLanguageVoiceField />
+            <TtsDefaultVoiceField />
+            <TtsRateField />
+            <TtsPitchField />
+            <TtsVolumeField />
+          </>
+        ) : (
+          <OpenAICompatibleTTSFields />
+        )}
       </FieldGroup>
     </ConfigCard>
+  )
+}
+
+function TtsBackendField() {
+  const [ttsConfig, setTtsConfig] = useAtom(configFieldsAtomMap.tts)
+
+  return (
+    <Field>
+      <FieldLabel htmlFor="ttsBackend">{i18n.t("options.tts.backend.label")}</FieldLabel>
+      <Select
+        value={ttsConfig.backend}
+        onValueChange={(backend) => {
+          if (backend === "edge" || backend === "openai-compatible") {
+            void setTtsConfig({ backend })
+          }
+        }}
+      >
+        <SelectTrigger id="ttsBackend" className="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectItem value="edge">{i18n.t("options.tts.backend.edge")}</SelectItem>
+            <SelectItem value="openai-compatible">
+              {i18n.t("options.tts.backend.openAICompatible")}
+            </SelectItem>
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+      <FieldDescription>{i18n.t("options.tts.backend.description")}</FieldDescription>
+    </Field>
+  )
+}
+
+interface TtsTextFieldProps {
+  id: string
+  label: string
+  hint?: string
+  value: string
+  type?: "text" | "password"
+  allowEmpty?: boolean
+  onCommit: (value: string) => void
+}
+
+function TtsTextField({
+  id,
+  label,
+  hint,
+  value,
+  type = "text",
+  allowEmpty = false,
+  onCommit,
+}: TtsTextFieldProps) {
+  const [draftValue, setDraftValue] = useState(value)
+
+  return (
+    <Field
+      validationMode="onBlur"
+      validate={(inputValue) => {
+        if (allowEmpty || String(inputValue).trim()) {
+          return null
+        }
+        return i18n.t("options.tts.external.required")
+      }}
+    >
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Input
+        id={id}
+        type={type}
+        value={draftValue}
+        onChange={(event) => {
+          setDraftValue(event.target.value)
+        }}
+        onBlur={() => {
+          const nextValue = allowEmpty ? draftValue : draftValue.trim()
+          if (allowEmpty || nextValue) {
+            onCommit(nextValue)
+          }
+        }}
+      />
+      <FieldError />
+      {hint && <FieldDescription>{hint}</FieldDescription>}
+    </Field>
+  )
+}
+
+function OpenAICompatibleTTSFields() {
+  const [ttsConfig, setTtsConfig] = useAtom(configFieldsAtomMap.tts)
+  const { play, isFetching, isPlaying } = useTextToSpeech(ANALYTICS_SURFACE.TTS_SETTINGS)
+  const externalConfig = ttsConfig.openAICompatible
+  const isFetchingOrPlaying = isFetching || isPlaying
+
+  const updateExternalConfig = (patch: Partial<typeof externalConfig>) => {
+    return setTtsConfig({
+      openAICompatible: {
+        ...externalConfig,
+        ...patch,
+      },
+    })
+  }
+
+  return (
+    <>
+      <TtsTextField
+        key={externalConfig.baseURL}
+        id="externalTtsBaseURL"
+        label={i18n.t("options.tts.external.baseURL.label")}
+        hint={i18n.t("options.tts.external.baseURL.hint")}
+        value={externalConfig.baseURL}
+        onCommit={(baseURL) => void updateExternalConfig({ baseURL })}
+      />
+      <TtsTextField
+        key={externalConfig.apiKey}
+        id="externalTtsApiKey"
+        label={i18n.t("options.tts.external.apiKey.label")}
+        hint={i18n.t("options.tts.external.apiKey.hint")}
+        value={externalConfig.apiKey}
+        type="password"
+        allowEmpty
+        onCommit={(apiKey) => void updateExternalConfig({ apiKey })}
+      />
+      <TtsTextField
+        key={externalConfig.model}
+        id="externalTtsModel"
+        label={i18n.t("options.tts.external.model.label")}
+        value={externalConfig.model}
+        onCommit={(model) => void updateExternalConfig({ model })}
+      />
+      <TtsTextField
+        key={externalConfig.voice}
+        id="externalTtsVoice"
+        label={i18n.t("options.tts.external.voice.label")}
+        value={externalConfig.voice}
+        onCommit={(voice) => void updateExternalConfig({ voice })}
+      />
+      <Field>
+        <FieldLabel htmlFor="externalTtsResponseFormat">
+          {i18n.t("options.tts.external.responseFormat.label")}
+        </FieldLabel>
+        <Select
+          value={externalConfig.responseFormat}
+          onValueChange={(responseFormat) => {
+            if (responseFormat && OPENAI_COMPATIBLE_TTS_RESPONSE_FORMATS.includes(responseFormat)) {
+              void updateExternalConfig({ responseFormat })
+            }
+          }}
+        >
+          <SelectTrigger id="externalTtsResponseFormat" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {OPENAI_COMPATIBLE_TTS_RESPONSE_FORMATS.map((format) => (
+                <SelectItem key={format} value={format}>
+                  {format.toUpperCase()}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </Field>
+      <TtsNumberField
+        key={externalConfig.speed}
+        id="externalTtsSpeed"
+        label={i18n.t("options.tts.external.speed.label")}
+        hint={i18n.t("options.tts.external.speed.hint")}
+        value={externalConfig.speed}
+        min={MIN_OPENAI_COMPATIBLE_TTS_SPEED}
+        max={MAX_OPENAI_COMPATIBLE_TTS_SPEED}
+        step="0.05"
+        schema={openAICompatibleTTSSpeedSchema}
+        onCommit={(speed) => void updateExternalConfig({ speed })}
+      />
+      <TtsTextField
+        key={externalConfig.instructions}
+        id="externalTtsInstructions"
+        label={i18n.t("options.tts.external.instructions.label")}
+        hint={i18n.t("options.tts.external.instructions.hint")}
+        value={externalConfig.instructions}
+        allowEmpty
+        onCommit={(instructions) => void updateExternalConfig({ instructions })}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => {
+          void play(i18n.t("options.tts.voice.previewSample"), ttsConfig)
+        }}
+        disabled={isFetchingOrPlaying}
+      >
+        {isFetchingOrPlaying ? <IconLoader2 className="animate-spin" /> : <IconPlayerPlayFilled />}
+        {i18n.t("options.tts.external.preview")}
+      </Button>
+    </>
   )
 }
 
@@ -330,6 +547,7 @@ function TtsNumberField({
   min,
   max,
   schema,
+  step = "1",
   onCommit,
 }: TtsNumberFieldProps) {
   const [draftValue, setDraftValue] = useState(() => String(value))
@@ -359,7 +577,7 @@ function TtsNumberField({
       <Input
         id={id}
         type="number"
-        step="1"
+        step={step}
         min={min}
         max={max}
         value={draftValue}
