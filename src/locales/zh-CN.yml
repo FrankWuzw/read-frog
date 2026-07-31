@@ -929,6 +929,7 @@ options:
         lastSyncTime: 最后同步时间
         logout: 登出账号
         logoutSuccess: 已登出 Google 账号
+        oauthNotConfigured: 本地构建未配置有效的 Google OAuth Client ID。请为扩展 ID「$1」创建“Chrome 扩展程序”OAuth 客户端，设置 WXT_GOOGLE_CLIENT_ID 后重新构建。
         unresolved:
           title: 配置同步解决
           description: 本地与云端配置存在差异，请选择每个字段要保留的版本。

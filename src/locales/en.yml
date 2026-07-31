@@ -929,6 +929,7 @@ options:
         lastSyncTime: Last sync at
         logout: Logout
         logoutSuccess: Logged out from Google account
+        oauthNotConfigured: This local build has no valid Google OAuth Client ID. Create a “Chrome Extension” OAuth client for extension ID “$1”, set WXT_GOOGLE_CLIENT_ID, and rebuild.
         unresolved:
           title: Configuration Sync Resolution
           description: Local and remote configurations differ. Please choose which version to keep for each field.
