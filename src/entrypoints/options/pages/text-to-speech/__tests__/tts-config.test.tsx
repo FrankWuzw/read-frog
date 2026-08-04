@@ -4,7 +4,7 @@ import { createStore, Provider } from "jotai"
 import { describe, expect, it, vi } from "vitest"
 import { configAtom } from "@/utils/atoms/config"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
-import { TtsConfig } from "../tts-config"
+import { OpenAICompatibleTTSSection } from "../backend"
 
 vi.mock("@/hooks/use-text-to-speech", () => ({
   useTextToSpeech: () => ({
@@ -30,7 +30,7 @@ function renderExternalTTSConfig() {
 
   return render(
     <Provider store={store}>
-      <TtsConfig />
+      <OpenAICompatibleTTSSection />
     </Provider>,
   )
 }

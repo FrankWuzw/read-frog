@@ -66,10 +66,12 @@ async function translateTextUsingPageConfig(
       webSummary?: string | null
     }
     textFormat?: TranslationTextFormat
+    preserveLineBreaks?: boolean
     // Session captured at pipeline entry by the caller; see translateTextForPage.
     sessionId?: string
     configuredPrompt?: "default" | "custom"
     translationActionContext?: TranslationActionContext
+    forceRetranslation?: boolean
   } = {},
 ): Promise<string> {
   const preparedText = prepareTranslationText(text)
@@ -112,9 +114,11 @@ async function translateTextUsingPageConfig(
     extraHashTags: options.extraHashTags,
     webPageContext: options.webPageContext,
     textFormat: options.textFormat,
+    preserveLineBreaks: options.preserveLineBreaks,
     sessionId: options.sessionId,
     configuredPrompt: options.configuredPrompt,
     translationActionContext: options.translationActionContext,
+    forceRetranslation: options.forceRetranslation,
   })
 }
 
@@ -126,6 +130,7 @@ export async function translateTextForPage(
   text: string,
   textFormat: TranslationTextFormat = "plain",
   translationActionContext?: TranslationActionContext,
+  options?: { preserveLineBreaks?: boolean },
 ): Promise<string> {
   // Capture the session id synchronously at pipeline entry. Reading it later
   // (after the awaits below, e.g. the network-backed page summary) could see
@@ -143,9 +148,13 @@ export async function translateTextForPage(
   return translateTextUsingPageConfig(config, text, {
     webPageContext,
     textFormat,
+    preserveLineBreaks: options?.preserveLineBreaks,
     sessionId,
     configuredPrompt: config.translate.customPromptsConfig.promptId === null ? "default" : "custom",
     translationActionContext,
+    forceRetranslation:
+      translationActionContext?.feature === "hover_translation" &&
+      config.translate.node.forceRetranslation,
   })
 }
 
@@ -223,5 +232,7 @@ export async function translateTextForInput(
     providerConfig,
     enableAIContentAware: config.translate.enableAIContentAware,
     webPageContext,
+    // User-typed newlines are always meaningful.
+    preserveLineBreaks: true,
   })
 }

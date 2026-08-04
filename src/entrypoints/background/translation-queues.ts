@@ -469,6 +469,7 @@ export function setUpWebPageTranslationQueue(): void {
         scheduleAt,
         hash,
         textFormat,
+        preserveLineBreaks,
         webTitle,
         webDescription,
         webContent,
@@ -476,6 +477,7 @@ export function setUpWebPageTranslationQueue(): void {
         sessionId,
         promptExperimentVariant,
         translationActionContext,
+        forceRetranslation = false,
       },
     } = message
     const scope = buildTranslationScopeKey(message.sender, sessionId)
@@ -486,8 +488,9 @@ export function setUpWebPageTranslationQueue(): void {
       assertHtmlAttributeMarkerIntegrity(text, text)
     }
 
-    // Check cache first
-    if (hash) {
+    // Check cache first — unless the user asked for a fresh translation. The
+    // existing entry is left untouched unless the fresh request succeeds below.
+    if (hash && !forceRetranslation) {
       const cachedTranslation = await getValidatedCachedTranslation(
         hash,
         text,
@@ -561,6 +564,7 @@ export function setUpWebPageTranslationQueue(): void {
       const thunk = (signal?: AbortSignal) =>
         executeTranslate(text, langConfig, providerConfig, getTranslatePrompt, {
           textFormat,
+          preserveLineBreaks,
           signal,
         })
       result = await requestQueue.enqueue(thunk, scheduleAt, hash, scope ? [scope] : undefined)

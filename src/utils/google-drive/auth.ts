@@ -34,7 +34,7 @@ function getGoogleClientId(): string {
 
   if (!clientId?.endsWith(GOOGLE_CLIENT_ID_SUFFIX)) {
     throw new Error(
-      i18n.t("options.config.sync.googleDrive.oauthNotConfigured", [browser.runtime.id]),
+      i18n.t("options.preference.config.googleDrive.oauthNotConfigured", [browser.runtime.id]),
     )
   }
 

@@ -44,6 +44,7 @@ import {
   wasCharacterDataChangeExtensionDriven,
   wasNodeRemovedByExtension,
 } from "@/utils/host/translate/core/translation-state"
+import { canSplitParagraphIntoDescendants } from "@/utils/host/translate/dom/paragraph-segmentation"
 import {
   removeAllTranslatedWrapperNodes,
   translateNodes,
@@ -91,9 +92,12 @@ interface IPageTranslationManager {
 
   /**
    * Stops the automatic page translation functionality
-   * Cleans up all observers and removes translated content and set storage
+   * Cleans up all observers and removes translated content and set storage.
+   * Pass `userInitiated` when the stop comes from a user surface (shortcut,
+   * touch gesture, popup/floating-button toggle) so the background records
+   * the refusal and auto-translation stops re-enabling the page (#2011).
    */
-  stop: () => void
+  stop: (options?: { userInitiated?: boolean }) => void
 
   /**
    * Re-resolves the site rule for the current URL and swaps injected CSS in
@@ -308,8 +312,12 @@ export class PageTranslationManager implements IPageTranslationManager {
       this.observeMutations(document.documentElement)
 
       // Label existing elements in time-sliced chunks (walkability caching is
-      // handled by the walk's onBlockedElement callback).
-      const initialWalk = this.observeTopLevelParagraphs(document.body, config, { chunked: true })
+      // handled by the walk's onBlockedElement callback). Start at
+      // documentElement so pre-existing reader roots mounted beside body are
+      // included as well as ordinary body content.
+      const initialWalk = this.observeTopLevelParagraphs(document.documentElement, config, {
+        chunked: true,
+      })
       this.initialWalkDone = initialWalk
       try {
         await initialWalk
@@ -339,8 +347,8 @@ export class PageTranslationManager implements IPageTranslationManager {
     }
   }
 
-  stop(): void {
-    this.stopInternal({ notify: true })
+  stop(options?: { userInitiated?: boolean }): void {
+    this.stopInternal({ notify: true, userInitiated: options?.userInitiated })
   }
 
   async refreshSiteRuleCSS(): Promise<void> {
@@ -365,7 +373,13 @@ export class PageTranslationManager implements IPageTranslationManager {
     }
   }
 
-  private stopInternal({ notify }: { notify: boolean }): void {
+  private stopInternal({
+    notify,
+    userInitiated,
+  }: {
+    notify: boolean
+    userInitiated?: boolean
+  }): void {
     if (!this.isPageTranslating) {
       console.warn("PageTranslationManager is already inactive")
       return
@@ -375,6 +389,7 @@ export class PageTranslationManager implements IPageTranslationManager {
       void sendMessage("setAndNotifyPageTranslationStateChangedByManager", {
         enabled: false,
         url: window.location.href,
+        userInitiated,
       })
     }
 
@@ -446,7 +461,7 @@ export class PageTranslationManager implements IPageTranslationManager {
       if (!startTouches) return
       if (performance.now() - startTime < PageTranslationManager.MAX_DURATION) {
         if (this.isPageTranslating) {
-          this.stop()
+          this.stop({ userInitiated: true })
         } else {
           void this.start(
             createFeatureUsageContext(
@@ -635,7 +650,7 @@ export class PageTranslationManager implements IPageTranslationManager {
       container.hasAttribute("data-read-frog-paragraph") &&
       container.getAttribute("data-read-frog-walked") === walkId
     ) {
-      this.observeParagraphUnit(container, walkId, 0)
+      this.observeParagraphUnit(container, walkId, config, 0)
       return
     }
 
@@ -647,7 +662,7 @@ export class PageTranslationManager implements IPageTranslationManager {
       //  • the ancestor is *not* inside container
       return !ancestor || !container.contains(ancestor)
     })
-    topLevelParagraphs.forEach((el) => this.observeParagraphUnit(el, walkId, 0))
+    topLevelParagraphs.forEach((el) => this.observeParagraphUnit(el, walkId, config, 0))
   }
 
   /**
@@ -663,8 +678,16 @@ export class PageTranslationManager implements IPageTranslationManager {
    * <em>s) are not covered by any observed unit and stay untranslated. Stray
    * standalone inlines in a >3-viewport flat container are rare, and
    * numeric-only text is skipped by the pipeline anyway.
+   *
+   * Exception: a newline-preserving flow container is never split into
+   * inline descendants — see canSplitParagraphIntoDescendants.
    */
-  private observeParagraphUnit(element: HTMLElement, walkId: string, depth: number): void {
+  private observeParagraphUnit(
+    element: HTMLElement,
+    walkId: string,
+    config: Config,
+    depth: number,
+  ): void {
     const observer = this.intersectionObserver
     if (!observer) return
 
@@ -693,8 +716,24 @@ export class PageTranslationManager implements IPageTranslationManager {
       observer.observe(element)
       return
     }
+    if (
+      config.translate.mode === "bilingual" &&
+      !canSplitParagraphIntoDescendants(element, innerTopLevelParagraphs, config)
+    ) {
+      // A newline-preserving flow (X note tweet: pre-wrap div of inline
+      // rich-text <span> paragraphs,
+      // https://x.com/davidjpark96/status/1789773192435060737) must not be
+      // split — per-span observation translates each span as one blob at the
+      // span's end instead of interleaving per blank-line paragraph. Observed
+      // whole, the div-level virtual-paragraph plan segments it correctly.
+      // Bilingual only: translationOnly has no virtual-paragraph plan, swaps
+      // text in place (no blob-at-span-end problem), and would lose viewport
+      // gating plus batch one giant request if observed whole.
+      observer.observe(element)
+      return
+    }
     for (const paragraph of innerTopLevelParagraphs) {
-      this.observeParagraphUnit(paragraph, walkId, depth + 1)
+      this.observeParagraphUnit(paragraph, walkId, config, depth + 1)
     }
   }
 

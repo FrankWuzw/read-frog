@@ -65,6 +65,7 @@ interface ProtocolMap {
   setAndNotifyPageTranslationStateChangedByManager: (data: {
     enabled: boolean
     url?: string
+    userInitiated?: boolean
   }) => void
   notifyTranslationStateChanged: (data: { enabled: boolean }) => void
   ensureIframeHostContentInjected: (data: { tabId?: number }) => void
@@ -112,6 +113,9 @@ interface ProtocolMap {
     scheduleAt: number
     hash: string
     textFormat?: TranslationTextFormat
+    // Source line breaks are semantic (newline-preserving container or typed
+    // input); providers whose transport collapses "\n" must protect them.
+    preserveLineBreaks?: boolean
     webTitle?: string | null
     webDescription?: string | null
     webContent?: string | null
@@ -122,6 +126,7 @@ interface ProtocolMap {
     sessionId?: string
     promptExperimentVariant?: PromptExperimentVariant
     translationActionContext?: TranslationActionContext
+    forceRetranslation?: boolean
   }) => Promise<
     | string
     | {

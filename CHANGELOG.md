@@ -1,5 +1,75 @@
 # @read-frog/extension
 
+## 1.45.1
+
+### Patch Changes
+
+- [#2029](https://github.com/mengxi-ream/read-frog/pull/2029) [`be8e3e3`](https://github.com/mengxi-ream/read-frog/commit/be8e3e3053b5fbd36fc9677077a9bec6e6709714) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(options): cut custom action prompt previews by word count instead of character count, so they stay an even length across languages
+
+- [#2027](https://github.com/mengxi-ream/read-frog/pull/2027) [`028fc99`](https://github.com/mengxi-ream/read-frog/commit/028fc9940537f0167b2b24df4b3872d7538c8d7f) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - feat(options): turn Contact Us into a Help & Community page, and group the popup's More menu the same way
+
+- [#2029](https://github.com/mengxi-ream/read-frog/pull/2029) [`be8e3e3`](https://github.com/mengxi-ream/read-frog/commit/be8e3e3053b5fbd36fc9677077a9bec6e6709714) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - style(options): widen the settings page container to give content more room
+
+- [#2026](https://github.com/mengxi-ream/read-frog/pull/2026) [`63e0369`](https://github.com/mengxi-ream/read-frog/commit/63e0369bc388b9f6063fcde616a15e4b1de1585a) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - refactor(options): move heavy settings sections onto their own pages
+
+- [#1873](https://github.com/mengxi-ream/read-frog/pull/1873) [`ad03a69`](https://github.com/mengxi-ream/read-frog/commit/ad03a69fe9012026613606cae15a218f9ecaeb22) Thanks [@qup1010](https://github.com/qup1010)! - fix(subtitles): show original captions while translation is pending
+
+- [#2014](https://github.com/mengxi-ream/read-frog/pull/2014) [`d4adb7a`](https://github.com/mengxi-ream/read-frog/commit/d4adb7a33bc46e770514f391c228239c7778a4de) Thanks [@JoeJoeflyn](https://github.com/JoeJoeflyn)! - feat(site-rules): allow per-site `.add`/`.remove` overrides of the built-in DOM tag sets (dontWalkTags, dontWalkButTranslateTags, mainContentIgnoreTags, forceBlockTags, forceInlineTranslationTags), and ship a localhost rule that lets SillyTavern's `<p><code>` narration translate ([#1951](https://github.com/mengxi-ream/read-frog/issues/1951))
+
+- [#2030](https://github.com/mengxi-ream/read-frog/pull/2030) [`69792a2`](https://github.com/mengxi-ream/read-frog/commit/69792a26e1420520fd8b166f23f0885f9096b165) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(translate): correct X tweet formatting — interleave long note-tweet paragraphs with their translations, and preserve line breaks and list dashes through Google Translate
+
+## 1.45.0
+
+### Minor Changes
+
+- [#2022](https://github.com/mengxi-ream/read-frog/pull/2022) [`eb24056`](https://github.com/mengxi-ream/read-frog/commit/eb24056218dcff1f0da198043282dec61c61389e) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - feat(providers): add Custom Responses alongside Custom Chat Complete
+
+### Patch Changes
+
+- [#2006](https://github.com/mengxi-ream/read-frog/pull/2006) [`075994b`](https://github.com/mengxi-ream/read-frog/commit/075994b97a797030421fdd45e96a0d607e223f9f) Thanks [@thedavidweng](https://github.com/thedavidweng)! - fix(model): drop the Cohere Command models retired on 2025-09-15 and move saved configs onto live ones
+
+  `command`, `command-nightly`, `command-light`, `command-light-nightly`, `command-r`, `command-r-03-2024`, `command-r-plus` and `command-r-plus-04-2024` are gone from the model picker, and `command-r-plus-08-2024` joins the `command-a-*` line. A v090 → v091 migration moves any saved Cohere provider off a retired id: the `command-r*` families keep their generation and the original `command`/`command-light` line lands on `command-a-03-2025`. That includes a retired id sitting in the custom-model field, which passes validation and would otherwise keep calling a dead endpoint with no visible error. New Cohere providers now default to `command-a-translate-08-2025`.
+
+- [#2020](https://github.com/mengxi-ream/read-frog/pull/2020) [`5defc32`](https://github.com/mengxi-ream/read-frog/commit/5defc32865bea19f769fb2551886f760e372c89c) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(site-rules): stop LinkedIn from clipping and merging translations
+
+  Replaces the dead `linkedinFeed` rule with a working `linkedin` one. Post and comment bodies no longer get cut off (their collapse container is `max-height:100px`, which only an `!important` override beats), actor headlines wrap instead of ellipsizing, and the post actor block stops collapsing into one oversized paragraph — its wrapper anchor is `display:inline` where the comment equivalent is `block`, so it is forced to a block node. Page chrome (nav, footer, sidebar, ads), author names and the "Visit my website" link are excluded from translation.
+
+## 1.44.1
+
+### Patch Changes
+
+- [#2019](https://github.com/mengxi-ream/read-frog/pull/2019) [`72ce7c2`](https://github.com/mengxi-ream/read-frog/commit/72ce7c24476df61379923eb9966811a77cd8a68b) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - chore(deps): bump dependencies, including the `js-sha256` 1.0 and `jsdom` 30 majors — `js-sha256` 1.0 splits into a native-crypto path for Node and a pure-JS path for the browser bundle (hash output is unchanged, so persisted cache keys stay valid), `jsdom` 30 raises its Node floor and only affects the test environment, and `wxt` 0.21.3 swaps its zip implementation. Also pins the pnpm-managed Node runtime to `^26.5.1` and aligns the CI `node-version` with it, so the declared version matches the one that actually runs the build and tests.
+
+- [#2004](https://github.com/mengxi-ream/read-frog/pull/2004) [`7ead566`](https://github.com/mengxi-ream/read-frog/commit/7ead566b2b4f81ba70a01ec355c5b4080e5a9925) Thanks [@thedavidweng](https://github.com/thedavidweng)! - feat(model): add command-a-plus-05-2026 and command-a-translate-08-2025 to Cohere provider
+
+- [#2017](https://github.com/mengxi-ream/read-frog/pull/2017) [`46e0dd5`](https://github.com/mengxi-ream/read-frog/commit/46e0dd5276c438b6823f1471651b839bb1bfe1cb) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - feat(translation): add a fresh hover translation option
+
+- [#2013](https://github.com/mengxi-ream/read-frog/pull/2013) [`cbc19de`](https://github.com/mengxi-ream/read-frog/commit/cbc19de988c763ab38d439cd63cea6b1d4d538f9) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - feat(selection): reuse a pinned selection popover in place — translating or running a custom action on a new selection keeps the pinned window's position, size, and pin state and streams the new result into it instead of reopening at a new anchor
+
+- [#2015](https://github.com/mengxi-ream/read-frog/pull/2015) [`a5b4f2d`](https://github.com/mengxi-ream/read-frog/commit/a5b4f2d2b13c5e09e510dbc4c2ba1445a7e1f534) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - fix(translate): stop auto-translation from re-enabling a page the user manually turned off ([#2011](https://github.com/mengxi-ream/read-frog/issues/2011)) — a manual "show original" (popup, floating button, shortcut, touch gesture, context menu) now records a per-tab, per-origin refusal that the tab-activation language re-detection respects until the tab leaves that origin
+
+- [#2018](https://github.com/mengxi-ream/read-frog/pull/2018) [`854d68d`](https://github.com/mengxi-ream/read-frog/commit/854d68dc1594b5dde31b58895342a4d36e7b6d88) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - feat(subtitles): add a configurable shortcut to toggle subtitle translation
+
+- [#1992](https://github.com/mengxi-ream/read-frog/pull/1992) [`b1fa3dc`](https://github.com/mengxi-ream/read-frog/commit/b1fa3dcad44843b04505e8b493e1dbadf491d74e) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - fix(translation): translate reader-mode content mounted outside the page body
+
+- [#2010](https://github.com/mengxi-ream/read-frog/pull/2010) [`4605883`](https://github.com/mengxi-ream/read-frog/commit/460588390cc77cb400d92cf480302a7d2259f6a8) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - style(options): let the website pattern lists run full height on their own pages
+
+- [#2010](https://github.com/mengxi-ream/read-frog/pull/2010) [`4605883`](https://github.com/mengxi-ream/read-frog/commit/460588390cc77cb400d92cf480302a7d2259f6a8) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - i18n(contact-us): point the WeChat card at the discussion group
+
+## 1.44.0
+
+### Minor Changes
+
+- [#1997](https://github.com/mengxi-ream/read-frog/pull/1997) [`9009c67`](https://github.com/mengxi-ream/read-frog/commit/9009c67ec7070384d998d8acd7a6e1eabc90cf8e) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - feat(options): rebuild the settings UI around sections and drill-in pages
+
+### Patch Changes
+
+- [#2002](https://github.com/mengxi-ream/read-frog/pull/2002) [`bf66245`](https://github.com/mengxi-ream/read-frog/commit/bf6624515a1b012b36754449c45f4b7fadb1dca6) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - Drop the redundant "Preview" heading above the subtitle style preview
+
+- [#2002](https://github.com/mengxi-ream/read-frog/pull/2002) [`bf66245`](https://github.com/mengxi-ream/read-frog/commit/bf6624515a1b012b36754449c45f4b7fadb1dca6) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - Replace the slider with a scrubber that shows its value in the track
+
+- [#2003](https://github.com/mengxi-ream/read-frog/pull/2003) [`d77c0b1`](https://github.com/mengxi-ream/read-frog/commit/d77c0b196c7d443d6222e1e027109d03a6c7efa5) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - feat(subtitles): replace the native colour input with a themed picker
+
 ## 1.43.6
 
 ### Patch Changes
