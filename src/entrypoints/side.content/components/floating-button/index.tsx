@@ -3,7 +3,7 @@ import { IconLock, IconLockOpen, IconMessageCircle, IconSettings, IconX } from "
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect, useRef, useState } from "react"
 import { browser } from "#imports"
-import readFrogLogo from "@/assets/icons/read-frog.png?url&no-inline"
+import readFrogLogo from "@/assets/icons/read-frog-of-mine.png?url&no-inline"
 import {
   DropdownMenu,
   DropdownMenuContent,

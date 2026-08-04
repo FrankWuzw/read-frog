@@ -1,6 +1,6 @@
-name: Read Frog
-extName: "Read Frog - Translate & Learn"
-extDescription: Read Frog is an open source browser extension designed to help you learn languages deeply from any website.
+name: Read Frog of Mine
+extName: "Read Frog of Mine - Translate & Learn"
+extDescription: Read Frog of Mine is a personal edition of the open source Read Frog browser extension, customized for language learning.
 uninstallSurveyUrl: https://tally.so/r/nPK6Ob
 account:
   login: Log in

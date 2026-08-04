@@ -1,6 +1,6 @@
-name: 陪讀蛙
-extName: 陪讀蛙 - 翻譯與學習
-extDescription: 陪讀蛙是一款開放原始碼的瀏覽器擴充功能，能協助使用者在任何網站上深入學習語言。
+name: 我的陪讀蛙
+extName: 我的陪讀蛙 - 翻譯與學習
+extDescription: 我的陪讀蛙是以開源 Read Frog 改造的個人版瀏覽器擴充功能，依照自己的語言學習需求量身打造。
 uninstallSurveyUrl: https://tally.so/r/3E9XDL
 account:
   login: 登入
